@@ -12,32 +12,13 @@ class HomePageTest(TestCase):
         response = self.client.get('/')
         html = re.sub('\s+',' ',response.content.decode('utf8')).strip()
         self.assertTrue(html.startswith('<html>'))
-        self.assertIn('<title> To-Do lists </title>', html)
+        self.assertIn('<title>To-Dos App</title>', html)
         self.assertTrue(html.endswith('</html>'))
         
         self.assertTemplateUsed(response, 'home.html')
-    def test_can_save_a_POST_request(self):
-        response = self.client.post('/', data={'item_text': 'A new list item'})
-        self.assertEqual(Item.objects.count(), 1)
-        new_item = Item.objects.first()
-        self.assertEqual(new_item.text, 'A new list item')
-    def test_redirects_after_post(self):
-        response = self.client.post('/', data={'item_text': 'A bleh'})
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['location'], '/lists/the-only-list-in-the-world/')
-
     def test_only_saves_items_when_necessary(self):
         self.client.get('/')
         self.assertEqual(Item.objects.count(), 0)
-    def test_displays_all_list_items(self):
-        Item.objects.create(text='item 1 bleh')
-
-        Item.objects.create(text='item 2 bleh')
-
-        response = self.client.get('/')
-
-        self.assertIn('1: item 1 bleh', response.content.decode())
-        self.assertIn('2: item 2 bleh', response.content.decode())
 
 class ItemModelTest(TestCase):
     def test_saving_and_retrieving_items(self):
@@ -71,4 +52,17 @@ class ListViewTest(TestCase):
         self.assertContains(response, 'item1')
 
         self.assertContains(response, 'item2')
+
+class NewListTest(TestCase):
+    def test_can_save_a_POST_request(self):
+        response = self.client.post('/lists/new', data={'item_text': 'A new list item'})
+        self.assertEqual(Item.objects.count(), 1)
+        new_item = Item.objects.first()
+        self.assertEqual(new_item.text, 'A new list item')
+    def test_redirects_after_post(self):
+        response = self.client.post('/lists/new', data={'item_text': 'A bleh'})
+        
+        self.assertRedirects(response, '/lists/the-only-list-in-the-world/')
+
+
 
